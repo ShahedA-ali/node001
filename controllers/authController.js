@@ -2,6 +2,7 @@ const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
 const catchAsync = require("../utils/catchAsync");
+const { promisify } = require('util');
 
 const signToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -54,13 +55,13 @@ exports.login = catchAsync(async (req, res, next) => {
 })
 
 exports.register = catchAsync(async (req, res, next) => {
-    const {username, password, email} = req.body
+    const {username, password, email, role} = req.body
 
     // 1) Check whether username, password and email are valid
 
 
     // 2) Encrypt the Password
-    const cryptPassword = crypto.createHash('sha256').update('asd'+process.env.SECRET_KEY).digest('hex')
+    const cryptPassword = crypto.createHash('sha256').update(password+process.env.SECRET_KEY).digest('hex')
 
     // 2) Create User if error return the error
     const newUser = await User.create({username, password: cryptPassword, email})
@@ -88,28 +89,55 @@ exports.register = catchAsync(async (req, res, next) => {
     createSendToken(newUser, 201, res);
 })
 
+exports.protect = catchAsync(async (req, res, next) => {
+    // 1) Getting token and check of it's there
+    let token;
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith('Bearer')
+    ) {
+        token = req.headers.authorization.split(' ')[1];
+    }
 
-// app.get('/login', async (req, res) => {
-//     try {
-//       console.log('first')
-//       const result = await db.query('SELECT * FROM users');
-//       console.log(result.rows);
-//       res.send({result: 'okay'})
-//     } catch (err) {
-//       console.error(err);
-//       res.status(500).send('Internal Server Error');
-//     }
-//   })
-  
-//   app.post('/register', async(req, res) => {
-//     const {username, email, password} = req.body
-//     try {
-//       console.log(username, email, password)
-//       // const newUser = await db.query(`INSERT INTO users(username, password, email) VALUES('ahmad','ahmad','ahmad@gmail.com')`)
-//       const newUser = await db.query(`INSERT INTO users(username, password, email) VALUES('${username}', '${password}', '${email}');`)
-//       res.send({result: newUser})
-//     } catch (err) {
-//       console.error(err);
-//       res.status(500).send('Internal Server Error');
-//     }
-//   })
+    console.log(token)
+
+    if (!token) {
+        return next(
+            new Error(
+                'You are not logged in! Please log in to get access.',
+                401
+            )
+        );
+    }
+
+    // 2) Verification token
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    // 3) Check if user still exists
+    const currentUser = await User.findOne({id: decoded.id});
+    if (!currentUser) {
+        return next(
+            new Error(
+                'The user belonging to this token does no longer exist.',
+                401
+            )
+        );
+    }
+
+    // 4) Check if user changed password after the token was issued
+    // if (currentUser.changedPasswordAfter(decoded.iat)) {
+    //     return next(
+    //         new Error(
+    //             'User recently changed password! Please log in again.',
+    //             401
+    //         )
+    //     );
+    // }
+
+    // GRANT ACCESS TO PROTECTED ROUTE
+    req.user = currentUser;
+    next();
+});
+
+
+//////////////////       Create roles function and endpoint
