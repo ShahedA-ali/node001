@@ -13,7 +13,7 @@ const createSendToken = (user, statusCode, res) => {
     const token = signToken(user.id);
     const cookieOptions = {
         expires: new Date(
-            Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+            Date.now() + 24*60*60*1000
         ),
         httpOnly: true,
     };
@@ -48,13 +48,44 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     // 3) If everything ok, send token to client
-    // createSendToken(user, 200, res);
+    createSendToken(user, 200, res);
 
-    res.send({result: user})
+    // res.send({result: user})
 })
 
 exports.register = catchAsync(async (req, res, next) => {
+    const {username, password, email} = req.body
 
+    // 1) Check whether username, password and email are valid
+
+
+    // 2) Encrypt the Password
+    const cryptPassword = crypto.createHash('sha256').update('asd'+process.env.SECRET_KEY).digest('hex')
+
+    // 2) Create User if error return the error
+    const newUser = await User.create({username, password: cryptPassword, email})
+    if (newUser !== 1) {
+		console.log(newUser.detail == 'Key (email)=(ali@gmail.com) already exists.')
+        const duplicateError = newUser.detail.split('=')[0]
+		let error;  
+		switch (duplicateError) {
+			case 'Key (username)':
+				error = 'Duplicate username!'
+				break;
+
+			case 'Key (email)':
+				error = 'Duplicate email!'
+				break;
+		
+			default:
+				break;
+		}
+        console.log(error)
+		return next(new Error('error'), 403)
+	}
+    
+
+    createSendToken(newUser, 201, res);
 })
 
 

@@ -15,3 +15,17 @@ exports.findOne = async ({ id = 0, username = null, email = null }) => {
 	}
 
 }
+
+exports.create = async ({username = null, email = null, password = null}) => {
+	try {
+		if (!username || !email || !password) {
+			return Error('Provide all credintials!')
+		}
+		const newUser = await db.query(`INSERT INTO users(username, password, email) VALUES('${username}','${password}','${email}')`);
+
+		
+		return newUser.rowCount
+	} catch (error) {
+		return error
+	}
+}
