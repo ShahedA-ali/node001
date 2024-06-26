@@ -36,17 +36,21 @@ const createSendToken = (user, statusCode, res) => {
 
 exports.login = catchAsync(async (req, res, next) => {
     const {username, email, password} = req.body;
+    console.log(req.body)
     
     // 1) Check if username exist if no email should exist and password must exist
-    if (!username.trim() && !email.trim() || !password.trim()) {
-        return next(new Error('Please provide email or username and password!', 400));
+    if (!username && !email || !password) {
+        return next(res.send({result: 'Please provide email or username and password!', status: 400}));
     }
     // 2) Check if user exists && password is correct
     // find the user by username or by email
     const user = await User.findOne({username: username, email: email })
+    console.log(user)
     if (!user || user.password !== password) {
-        return next(new Error('Incorrect email or password', 401))
+        return next(res.send({result: 'Incorrect email or password', status: 401}))
     }
+
+    // const roles = await User.findMany({})
 
     // 3) If everything ok, send token to client
     createSendToken(user, 200, res);
