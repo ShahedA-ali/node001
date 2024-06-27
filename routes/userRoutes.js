@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.post('/login', authController.login);
 router.post('/register', authController.register);
-router.get('/pro', authController.protect);
+router.get('/pro', authController.protect, authController.restrictTo(['DEC_REF_YER']));
 
 module.exports = router;

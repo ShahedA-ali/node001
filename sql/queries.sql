@@ -112,4 +112,19 @@
 ORDER BY DEC_REF_YER,
          ide_reg_nbr,
          i.key_itm_nbr,
-         tax_lin_cod
+         tax_lin_cod;
+
+
+
+-- query
+SELECT 
+    users.username AS username,
+    roles.role_name AS rolename
+FROM 
+    users
+INNER JOIN 
+    user_roles ON user_roles.user_id = users.id
+INNER JOIN 
+    roles ON user_roles.role_id = roles.id
+WHERE 
+	users.id = 2;

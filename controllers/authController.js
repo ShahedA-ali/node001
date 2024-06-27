@@ -1,6 +1,7 @@
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const Role = require('../models/Role')
 const catchAsync = require("../utils/catchAsync");
 const { promisify } = require('util');
 
@@ -24,6 +25,7 @@ const createSendToken = (user, statusCode, res) => {
 
     // Remove password from output
     user.password = undefined;
+    user.id = undefined
 
     res.status(statusCode).json({
         status: 'success',
@@ -43,23 +45,30 @@ exports.login = catchAsync(async (req, res, next) => {
         return next(res.send({result: 'Please provide email or username and password!', status: 400}));
     }
     // 2) Check if user exists && password is correct
-    // find the user by username or by email
+        // find the user by username or by email
     const user = await User.findOne({username: username, email: email })
     console.log(user)
     if (!user || user.password !== password) {
         return next(res.send({result: 'Incorrect email or password', status: 401}))
     }
 
-    // const roles = await User.findMany({})
+    // 3) accumulate user roles
+        // find user roles
+    const roles = await Role.findMany({userId: user.id})
+    if (!roles.count) {
+        return next(res.send({result: 'Invalid user, no roles', status: 403}))
+    }
+        // add to users the roles
+    user.roles = roles.roles
 
-    // 3) If everything ok, send token to client
+    // 4) If everything ok, send token to client
     createSendToken(user, 200, res);
 
     // res.send({result: user})
 })
 
 exports.register = catchAsync(async (req, res, next) => {
-    const {username, password, email, role} = req.body
+    const {username, password, email} = req.body
 
     // 1) Check whether username, password and email are valid
 
@@ -116,7 +125,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
     // 2) Verification token
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
+    console.log(decoded)
     // 3) Check if user still exists
     const currentUser = await User.findOne({id: decoded.id});
     if (!currentUser) {
@@ -138,10 +147,31 @@ exports.protect = catchAsync(async (req, res, next) => {
     //     );
     // }
 
+    // 
+    const roles = await Role.findMany({userId: decoded.id})
+    if (!roles.count) {
+        return next(res.send({result: 'Invalid user, no roles', status: 403}))
+    }
+    const arrayOfRolesForUser = roles.roles.map(item => item.rolename)
+    currentUser.roles = arrayOfRolesForUser
     // GRANT ACCESS TO PROTECTED ROUTE
     req.user = currentUser;
+    console.log(req.user)
     next();
 });
+
+exports.restrictTo = (roles) => {
+    return (req, res, next) => {
+        // roles ['admin', 'lead-guide']. role='user'
+        console.log(req.user.roles, roles)
+        console.log(roles.some(role => req.user.roles.includes(role)))
+        if (!roles.some(role => req.user.roles.includes(role))) {
+            return next(res.send({result: 'You do not have permission to perform this action', status: 403}))
+        }
+
+        next();
+    };
+};
 
 
 //////////////////       Create roles function and endpoint

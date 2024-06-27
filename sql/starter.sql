@@ -19,12 +19,12 @@ INSERT INTO users(username, password, email) VALUES('admin','admin','admin@gmail
 -- table for roles
 CREATE TABLE roles (
     ID SERIAL PRIMARY KEY,
-    roleName VARCHAR(100) NOT NULL UNIQUE,
-    roleDetail VARCHAR(300)
+    role_name VARCHAR(100) NOT NULL UNIQUE,
+    role_detail VARCHAR(300)
 );
 
 -- table for many to many relation what users have which roles
-CREATE TABLE userRoles (
+CREATE TABLE user_roles (
     ID SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     role_id INT NOT NULL,
@@ -34,7 +34,13 @@ CREATE TABLE userRoles (
 );
 
 -- roles entry
-INSERT INTO roles(roleName, roleDetail) VALUES ('ADMIN', 'Can perform every role') ('DEC_REF_YER', ''), ('SAD_GENERAL_SEGMENT', ''), ('SAD_ITEM', ''), ('SAD_TAX', ''), ('UNTAXTAB' , '');
+INSERT INTO roles(role_name, role_detail) VALUES ('ADMIN', 'Can perform every role'), ('DEC_REF_YER', ''), ('SAD_GENERAL_SEGMENT', ''), ('SAD_ITEM', ''), ('SAD_TAX', ''), ('UNTAXTAB' , '');
+
+-- insert dummy users
+INSERT INTO users(username, password, email) VALUES('shahed','shahed','shahed@gmail.com'), ('ahmad', 'ahmad', 'ahmad@gmail.com');
+
+-- insert dummy user roles as (user, role): (admin, ADMIN), (shahed, DEC_REF_YER), (shahed, SAD_GENERAL_SEGMENT), (shahed, SAD_ITEM), (ahmad, DEC_REF_YER), (ahmad, SAD_TAX)
+INSERT INTO user_roles(user_id, role_id) VALUES('1', '1'), ('2', '2'), ('2', '3'), ('2', '4'), ('3', '2'), ('3', '5');
 
 -- SELECT conname
 -- FROM pg_constraint
