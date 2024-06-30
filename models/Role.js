@@ -18,3 +18,17 @@ exports.findMany = async ({ userId = 0 }) => {
 	}
 
 }
+
+exports.create = async ({roleName = null, roleDetail = null}) => {
+	try {
+		if (!roleName || !roleDetail) {
+			return Error('Provide all credintials!')
+		}
+		const newRole = await db.query(`INSERT INTO roles(role_name, role_detail) VALUES('${roleName}','${roleDetail}')`);
+
+		
+		return newRole.rowCount
+	} catch (error) {
+		return error
+	}
+}
