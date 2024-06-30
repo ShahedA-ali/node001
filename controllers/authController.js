@@ -154,7 +154,7 @@ exports.protect = catchAsync(async (req, res, next) => {
         if (!roles.count) {
             return next(res.send({ result: 'Invalid user, no roles', status: 403 }))
         }
-        const arrayOfRolesForUser = roles.roles.map(item => item.rolename)
+        const arrayOfRolesForUser = roles.roles.map(item => item.role_name)
         currentUser.roles = arrayOfRolesForUser
         // GRANT ACCESS TO PROTECTED ROUTE
         req.user = currentUser;

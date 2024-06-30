@@ -7,8 +7,18 @@ exports.findMany = async ({ userId = 0 }) => {
 			return Error('id should be type Number and an Integer')
 		}
 
+		let roles;
+
         // to find users roles by userId parameter
-        const roles = await db.query(`SELECT roles.role_name AS rolename FROM user_roles INNER JOIN roles ON user_roles.role_id = roles.id WHERE user_roles.user_id = '${userId}';`)
+		if (userId) {
+			roles = await db.query(`SELECT roles.role_name FROM user_roles INNER JOIN roles ON user_roles.role_id = roles.id WHERE user_roles.user_id = '${userId}';`)
+		}
+
+		// to select all roles
+		// there should be no parameter passed to findMany
+		if (!userId) {
+			roles = await db.query(`SELECT role_name FROM roles;`)
+		}
 		// if (user.rowCount > 1) {
 		// 	return Error('findOne() is for returning only one record. \n More than one record found! \n ')
 		// }
@@ -32,3 +42,5 @@ exports.create = async ({roleName = null, roleDetail = null}) => {
 		return error
 	}
 }
+
+exports.deleteManyUserRole = async ({})
