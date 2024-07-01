@@ -1,7 +1,7 @@
 const db = require("../db");
 
 // 1- find users roles by passing users id to function
-exports.findMany = async ({ userId = 0 }) => {
+exports.findMany = async ({ userId = 0, roleName}) => {
 	try {
 		if (!Number.isInteger(parseInt(userId))) {
 			return Error('id should be type Number and an Integer')
@@ -11,7 +11,7 @@ exports.findMany = async ({ userId = 0 }) => {
 
         // to find users roles by userId parameter
 		if (userId) {
-			roles = await db.query(`SELECT roles.role_name FROM user_roles INNER JOIN roles ON user_roles.role_id = roles.id WHERE user_roles.user_id = '${userId}';`)
+			roles = await db.query(`SELECT roles.role_name, roles.id FROM user_roles INNER JOIN roles ON user_roles.role_id = roles.id WHERE user_roles.user_id = '${userId}';`)
 		}
 
 		// to select all roles
@@ -19,6 +19,7 @@ exports.findMany = async ({ userId = 0 }) => {
 		if (!userId) {
 			roles = await db.query(`SELECT role_name FROM roles;`)
 		}
+
 		// if (user.rowCount > 1) {
 		// 	return Error('findOne() is for returning only one record. \n More than one record found! \n ')
 		// }
@@ -34,7 +35,7 @@ exports.create = async ({roleName = null, roleDetail = null}) => {
 		if (!roleName || !roleDetail) {
 			return Error('Provide all credintials!')
 		}
-		const newRole = await db.query(`INSERT INTO roles(role_name, role_detail) VALUES('${roleName}','${roleDetail}')`);
+		const newRole = await db.query(`INSERT INTO roles(role_name, role_detail) VALUES('${roleName}','${roleDetail}');`);
 
 		
 		return newRole.rowCount
@@ -43,4 +44,44 @@ exports.create = async ({roleName = null, roleDetail = null}) => {
 	}
 }
 
-exports.deleteManyUserRole = async ({})
+exports.get = async ({roleName = null, id = 0}) => {
+	try {
+
+		const roles = await db.query(`SELECT * FROM roles ${!roleName && !id ? ';': `WHERE role_name = '${roleName}' or id = ${id};`}`);
+
+		return {count: roles.rowCount, roles: roles.rows}
+	} catch (error) {
+		return error
+	}
+}
+
+exports.deleteManyUserRoles = async ({userId = 0, roleId = []}) => {
+	console.log(userId, roleId)
+	try {
+		if (!userId || !roleId.length > 0) {
+			return Error('Provide all credintials!');
+		}
+		const query = `DELETE FROM user_roles WHERE user_id = ${userId} AND role_id = ANY($1)`;
+		const deleteRoles = await db.query(query, [roleId])
+
+		return deleteRoles.rowCount
+	} catch (error) {
+		console.log(error)
+		return error
+	}
+}
+
+exports.addManyUserRoles = async ({userId = 0, roleId = []}) => {
+	console.log(userId, roleId)
+	try {
+		if (!userId || !roleId.length > 0) {
+			return Error('Provide all credintials!');
+		}
+		const addRoles = await db.query(`INSERT INTO user_roles(user_id, role_id) VALUES${roleId.map(id => (` ('${userId}', '${id}')`))};`);
+
+		return addRoles.rowCount
+	} catch (error) {
+		console.log(error)
+		return error
+	}
+}
