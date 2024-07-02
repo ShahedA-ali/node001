@@ -22,16 +22,16 @@ const createSendToken = (user, statusCode, res) => {
     if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
     res.cookie('jwt', token, cookieOptions);
-
+    console.log(res.cookie())
     // Remove password from output
     user.password = undefined;
     user.id = undefined
 
     res.status(statusCode).json({
-        status: 'success',
+        success: true,
         token,
         data: {
-            user,
+            // user,
         },
     });
 };
@@ -54,12 +54,12 @@ exports.login = catchAsync(async (req, res, next) => {
 
     // 3) accumulate user roles
     // find user roles
-    const roles = await Role.findMany({ userId: user.id })
+    const roles = await Role.findMany({ userId: user.id });
     if (!roles.count) {
         return next(res.send({ result: 'Invalid user, no roles', status: 403 }))
     }
     // add to users the roles
-    user.roles = roles.roles
+    // user.roles = roles.roles.map(role => role.role_name);
 
     // 4) If everything ok, send token to client
     createSendToken(user, 200, res);
@@ -152,11 +152,13 @@ exports.protect = catchAsync(async (req, res, next) => {
         // 
         const roles = await Role.findMany({ userId: decoded.id })
         if (!roles.count) {
-            return next(res.send({ result: 'Invalid user, no roles', status: 403 }))
+            return next(res.send({success: false, result: 'Invalid user, no roles', status: 403 }))
         }
         const arrayOfRolesForUser = roles.roles.map(item => item.role_name)
         currentUser.roles = arrayOfRolesForUser
         // GRANT ACCESS TO PROTECTED ROUTE
+        currentUser.password = undefined;
+        currentUser.id = undefined;
         req.user = currentUser;
         console.log(req.user)
         next();
@@ -172,12 +174,21 @@ exports.restrictTo = (roles) => {
         console.log(req.user.roles, roles)
         console.log(roles.some(role => req.user.roles.includes(role)))
         if (!roles.some(role => req.user.roles.includes(role))) {
-            return next(res.send({ result: 'You do not have permission to perform this action', status: 403 }))
+            return next(res.send({ success: false, result: 'You do not have permission to perform this action', status: 403 }))
         }
 
         next();
     };
 };
+
+exports.verify = catchAsync(async (req, res, next) => {
+    res.status(200).json({
+        status: 'success',
+        data: {
+            user: req.user
+        }
+    })
+})
 
 exports.add = catchAsync(async (req, res, next) => {
     res.status(200).json({

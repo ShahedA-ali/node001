@@ -1,5 +1,6 @@
 const express = require('express')
 require('dotenv').config({ path: `.env.local` })
+var cors = require('cors')
 const db = require('./db')
 const app = express()
 
@@ -11,14 +12,7 @@ const userRouter = require('./routes/userRoutes')
 const roleRouter = require('./routes/roleRoutes')
 
 // Add Access Control Allow Origin headers
-app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept"
-    );
-    next();
-  });
+app.use(cors());
 const myLogger = function (req, res, next) {
     console.log('LOGGED')
     next()
