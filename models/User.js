@@ -29,3 +29,16 @@ exports.create = async ({username = null, email = null, password = null}) => {
 		return error
 	}
 }
+
+exports.delete = async ({id = 0, username = null, email = null}) => {
+	try {
+		if (!Number.isInteger(parseInt(id))) {
+			return Error('id should be type Number and an Integer')
+		}
+		const user = await db.query(`DELETE FROM users WHERE id = '${id}' or email = '${email}' or username = '${username}'`);
+
+		return user.rows[0]
+	} catch (error) {
+		return error
+	}
+}

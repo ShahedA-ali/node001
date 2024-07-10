@@ -31,7 +31,7 @@ const createSendToken = (user, statusCode, res) => {
         success: true,
         token,
         data: {
-            // user,
+            user,
         },
     });
 };
@@ -68,7 +68,7 @@ exports.login = catchAsync(async (req, res, next) => {
 })
 
 exports.register = catchAsync(async (req, res, next) => {
-    const { username, password, email } = req.body
+    const { username, password, email, roles } = req.body
 
     // 1) Check whether username, password and email are valid
 
@@ -96,6 +96,21 @@ exports.register = catchAsync(async (req, res, next) => {
         }
         console.log(error)
         return next(res.status(403).json({success: false, result: error}))
+    }
+    // console.log(roles, 'sldkfj')
+    // const roleIds = await Role.findMany({roleName: roles})
+    // .then(res => res.roles.map(item => item.id))
+    // console.log(roleIds)
+    const user = await User.findOne({username})
+    console.log(user)
+    try {
+        const rolesForUser = await Role.addManyUserRoles({userId: user.id, roleId: roles.map(role => role.id)})
+        // console.log(rolesForUser)
+        newUser.roles = rolesForUser
+    } catch (error) {
+        const deleteUser = await User.delete({id: user.id})
+        console.log(error, deleteUser)
+        return next(res.status(400).json({success: false, result: error}))
     }
 
 
@@ -191,9 +206,11 @@ exports.verify = catchAsync(async (req, res, next) => {
 })
 
 exports.add = catchAsync(async (req, res, next) => {
+    const a = await Role.findMany({roleName: ['ADMIN', 'SAD_GENERAL_SEGMENT']}).then(res => res.roles.map(item => item.id))
+    console.log(a)
     res.status(200).json({
         status: 'success',
-        data: { 'a': 'a' }
+        data: { 'a': a }
     })
 })
 

@@ -16,8 +16,13 @@ exports.findMany = async ({ userId = 0, roleName}) => {
 
 		// to select all roles
 		// there should be no parameter passed to findMany
-		if (!userId) {
+		if (!userId && !roleName) {
 			roles = await db.query(`SELECT role_name FROM roles;`)
+		}
+
+		if (roleName.length > 0){
+			const query = `SELECT * FROM roles WHERE role_name = ANY($1)`;
+			roles = await db.query(query, [roleName]);
 		}
 
 		// if (user.rowCount > 1) {
@@ -85,3 +90,23 @@ exports.addManyUserRoles = async ({userId = 0, roleId = []}) => {
 		return error
 	}
 }
+
+exports.userRoles = async ({user, roles}) => {
+	try {
+		if (!user || !roles.length > 0) {
+			return Error('Please provide roles for the user.')
+		}
+
+		const query = `SELECT * FROM roles WHERE role_name = ANY($1)`;
+		const rolesId = await db.query(query, [roles]);
+
+		
+
+		return rolesId.rows
+		
+	} catch (error) {
+		
+	}
+
+
+};
