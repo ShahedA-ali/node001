@@ -10,6 +10,7 @@ const port = 8000;
 
 const userRouter = require('./routes/userRoutes')
 const roleRouter = require('./routes/roleRoutes')
+const authRouter = require('./routes/authRoutes')
 
 // Add Access Control Allow Origin headers
 app.use(cors());
@@ -28,8 +29,9 @@ app.get('/', (req, res) => {
   res.send({result: 'Hello, World'});
 });
 
-app.use('/api/users', userRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/roles', roleRouter);
+app.use('/api/users', userRouter);
 
 app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);

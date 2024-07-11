@@ -16,6 +16,15 @@ exports.findOne = async ({ id = 0, username = null, email = null }) => {
 
 }
 
+exports.findMany = async({id = 0, username = null, email = null}) => {
+	try {
+		const users = await db.query(`SELECT * FROM users;`)
+		return users.rows
+	} catch (error) {
+		return error
+	}
+}
+
 exports.create = async ({username = null, email = null, password = null}) => {
 	try {
 		if (!username || !email || !password) {
