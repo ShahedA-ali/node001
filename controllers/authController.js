@@ -108,7 +108,7 @@ exports.register = catchAsync(async (req, res, next) => {
         // console.log(rolesForUser)
         newUser.roles = rolesForUser
     } catch (error) {
-        const deleteUser = await User.delete({id: user.id})
+        const deleteUser = await User.findAndDelete({id: user.id})
         console.log(error, deleteUser)
         return next(res.status(400).json({success: false, result: error}))
     }

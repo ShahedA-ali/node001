@@ -1,4 +1,5 @@
 const db = require("../db");
+const Role = require("./Role");
 
 exports.findOne = async ({ id = 0, username = null, email = null }) => {
 	try {
@@ -39,14 +40,19 @@ exports.create = async ({username = null, email = null, password = null}) => {
 	}
 }
 
-exports.delete = async ({id = 0, username = null, email = null}) => {
+exports.findAndDelete = async ({id = 0, username = null, email = null}) => {
 	try {
 		if (!Number.isInteger(parseInt(id))) {
 			return Error('id should be type Number and an Integer')
 		}
-		const user = await db.query(`DELETE FROM users WHERE id = '${id}' or email = '${email}' or username = '${username}'`);
+		const user = await this.findOne({id, username, email})
+		if (!user) {
+			return Error('No user by this id')
+		}
+		await Role.deleteAllUserRoles({userId: user.id})
+		const deleteUser = await db.query(`DELETE FROM users WHERE id = '${user.id}'`);
 
-		return user.rows[0]
+		return deleteUser.rowCount
 	} catch (error) {
 		return error
 	}

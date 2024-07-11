@@ -20,7 +20,7 @@ exports.findMany = async ({ userId = 0, roleName}) => {
 			roles = await db.query(`SELECT role_name FROM roles;`)
 		}
 
-		if (roleName.length > 0){
+		if (!userId && roleName.length > 0){
 			const query = `SELECT * FROM roles WHERE role_name = ANY($1)`;
 			roles = await db.query(query, [roleName]);
 		}
@@ -91,6 +91,18 @@ exports.addManyUserRoles = async ({userId = 0, roleId = []}) => {
 	}
 }
 
+exports.deleteAllUserRoles = async ({userId = 0}) => {
+	try {
+		if (!userId) {
+			return Error('Provide a user id!');
+		}
+		const deleteRoles = await db.query(`DELETE FROM user_roles WHERE user_id ='${userId}'`);
+		return deleteRoles.rowCount
+	} catch (error) {
+		return error
+	}
+}
+
 exports.userRoles = async ({user, roles}) => {
 	try {
 		if (!user || !roles.length > 0) {
@@ -99,8 +111,6 @@ exports.userRoles = async ({user, roles}) => {
 
 		const query = `SELECT * FROM roles WHERE role_name = ANY($1)`;
 		const rolesId = await db.query(query, [roles]);
-
-		
 
 		return rolesId.rows
 		
