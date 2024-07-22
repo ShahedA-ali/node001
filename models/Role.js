@@ -1,4 +1,5 @@
 const db = require("../db");
+const User = require('./User')
 
 // 1- find users roles by passing users id to function
 exports.findMany = async ({ userId = 0, roleName}) => {
@@ -117,6 +118,60 @@ exports.userRoles = async ({user, roles}) => {
 	} catch (error) {
 		
 	}
-
-
 };
+
+exports.updateUserRoles = async ({user, newRoles}) => {
+
+	try {
+	
+		/* newRoles should be in this format
+		"roles": [
+					{
+						"id": 1,
+						"role_name": "ADMIN",
+						"role_detail": "Can perform every role"
+					},
+					{
+						"id": 2,
+						"role_name": "DEC_REF_YER",
+						"role_detail": ""
+					}, */
+	
+		if (!username || !newRoles) {
+			return Error('Please provide a username and roles array for the username.')
+		}
+	
+		// const user = await User.findOne({ username });
+		// console.log(user)
+		// if (!user || !Array.isArray(roles)) {
+		// 	return Error('Provide valid credintials!')
+		// }
+	
+	
+		const allRoles = await this.findMany({}).then(res => res.roles.map(role => role.role_name));
+		for (let index = 0; index < newRoles.length; index++) {
+			if (!allRoles.includes(newRoles[index].role_name)) {
+				return Error(`<<${newRoles[index].role_name}>> is not a valid role!`)
+			}
+		}
+	
+		const userRoles = await this.findMany({ userId: user.id }).then(res => res.roles.map(role => role.id));
+		const userRolesSet = new Set(userRoles);
+		const newRolesSet = new Set(newRoles.map(role => role.id));
+	
+		console.log(userRolesSet, newRolesSet)
+	
+		const rolesToDelete = userRolesSet.difference(newRolesSet)
+		const rolesToAdd = newRolesSet.difference(userRolesSet)
+		console.log(user.id, [...rolesToDelete])
+		const deleteRolesFromUser = await this.deleteManyUserRoles({userId: user.id, roleId: [...rolesToDelete]});
+		const addRolesToUser = await this.addManyUserRoles({userId: user.id, roleId: [...rolesToAdd]});
+	
+		// res.json({ success: true, result: {update: {delete: deleteRolesFromUser, add: addRolesToUser}} })
+		return {delete: deleteRolesFromUser, add: addRolesToUser}
+		
+	} catch (error) {
+		return error
+	}
+
+}

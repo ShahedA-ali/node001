@@ -9,5 +9,6 @@ const router = express.Router();
 router.get('/', userController.getAll)
 router.get('/:id', userController.getOne)
 router.delete('/:id', userController.deleteOne)
+router.put('/:id', userController.updateOne)
 
 module.exports = router;

@@ -28,7 +28,7 @@ exports.getOne = catchAsync(async (req, res, next) => {
   const id = req.params.id
   const user = await User.findOne({ id }).then(async (user) => {
     if (!user) {
-      return next(res.send({message: 'No user with this id', status: 404}))
+      return next(res.send({ message: 'No user with this id', status: 404 }))
     }
     const roles = await Roles.findMany({ userId: id }).then(roles => roles.roles.map(role => role.role_name));
     user.roles = roles
@@ -48,11 +48,12 @@ exports.getOne = catchAsync(async (req, res, next) => {
 
 exports.deleteOne = catchAsync(async (req, res, next) => {
   const id = req.params.id
-    const user = await User.findAndDelete({ id })
-    console.log(user)
-    if (user !== 1) {
-      return next(res.send({message: 'No user with this id', status: 404}))
-    }
+  console.log(id)
+  const user = await User.findAndDelete({ id })
+  console.log(user)
+  if (user !== 1) {
+    return next(res.send({ message: 'No user with this id', status: 404 }))
+  }
 
   res.status(200).json({
     success: true,
@@ -64,21 +65,26 @@ exports.deleteOne = catchAsync(async (req, res, next) => {
 
 
 
-// exports.getOne = catchAsync(async (req, res, next) => {
-//   const id = req.params.id
-//   const user = await User.findOne({ id }).then(async (user) => {
-//     const roles = await Roles.findMany({ userId: id }).then(roles => roles.roles.map(role => role.role_name));
-//     user.roles = roles
-//     return user
-//   }
-//   );
-//   const { password, ...userNoPassword } = user;
+exports.updateOne = catchAsync(async (req, res, next) => {
+  const {username, email, password, roles} = req.body
+  const id = req.params.id
+  const user = await User.findOne({ id })
+  const a =
+  await User.findAndUpdate({id, data: {roles, username, email, password}})
+console.log(a)
+  // .then(async (user) => {
+  //   const roles = await Roles.findMany({ userId: id }).then(roles => roles.roles.map(role => role.role_name));
+  //   user.roles = roles
+  //   return user
+  // }
+  // );
+  // const { password, ...userNoPassword } = user;
 
-//   res.status(200).json({
-//     success: true,
-//     data: {
-//       userNoPassword,
-//     },
-//   });
-// });
+  res.status(200).json({
+    success: true,
+    data: {
+      'o': 'o',
+    },
+  });
+});
 
