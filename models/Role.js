@@ -21,9 +21,11 @@ exports.findMany = async ({ userId = 0, roleName}) => {
 			roles = await db.query(`SELECT role_name FROM roles;`)
 		}
 
-		if (!userId && roleName.length > 0){
-			const query = `SELECT * FROM roles WHERE role_name = ANY($1)`;
-			roles = await db.query(query, [roleName]);
+		if (!userId && roleName){
+			if (roleName.length > 0) {
+				const query = `SELECT * FROM roles WHERE role_name = ANY($1)`;
+				roles = await db.query(query, [roleName]);
+			}
 		}
 
 		// if (user.rowCount > 1) {
@@ -137,7 +139,7 @@ exports.updateUserRoles = async ({user, newRoles}) => {
 						"role_detail": ""
 					}, */
 	
-		if (!username || !newRoles) {
+		if (!user || !newRoles) {
 			return Error('Please provide a username and roles array for the username.')
 		}
 	
@@ -146,7 +148,7 @@ exports.updateUserRoles = async ({user, newRoles}) => {
 		// if (!user || !Array.isArray(roles)) {
 		// 	return Error('Provide valid credintials!')
 		// }
-	
+		console.log(newRoles)
 	
 		const allRoles = await this.findMany({}).then(res => res.roles.map(role => role.role_name));
 		for (let index = 0; index < newRoles.length; index++) {
@@ -157,18 +159,24 @@ exports.updateUserRoles = async ({user, newRoles}) => {
 	
 		const userRoles = await this.findMany({ userId: user.id }).then(res => res.roles.map(role => role.id));
 		const userRolesSet = new Set(userRoles);
-		const newRolesSet = new Set(newRoles.map(role => role.id));
+		const newRolesSet = new Set(newRoles.roles.map(role => role.id));
 	
 		console.log(userRolesSet, newRolesSet)
-	
-		const rolesToDelete = userRolesSet.difference(newRolesSet)
-		const rolesToAdd = newRolesSet.difference(userRolesSet)
-		console.log(user.id, [...rolesToDelete])
-		const deleteRolesFromUser = await this.deleteManyUserRoles({userId: user.id, roleId: [...rolesToDelete]});
-		const addRolesToUser = await this.addManyUserRoles({userId: user.id, roleId: [...rolesToAdd]});
-	
-		// res.json({ success: true, result: {update: {delete: deleteRolesFromUser, add: addRolesToUser}} })
-		return {delete: deleteRolesFromUser, add: addRolesToUser}
+		const areSetsEqual = (setA, setB) => {
+			return setA.size === setB.size && [...setA].every(value => setB.has(value));
+		};
+		if (!areSetsEqual(userRolesSet, newRolesSet)) {
+			const rolesToDelete = userRolesSet.difference(newRolesSet)
+			const rolesToAdd = newRolesSet.difference(userRolesSet)
+			console.log(user.id, [...rolesToDelete])
+			const deleteRolesFromUser = await this.deleteManyUserRoles({userId: user.id, roleId: [...rolesToDelete]});
+			const addRolesToUser = await this.addManyUserRoles({userId: user.id, roleId: [...rolesToAdd]});
+		
+			// res.json({ success: true, result: {update: {delete: deleteRolesFromUser, add: addRolesToUser}} })
+			return {delete: deleteRolesFromUser, add: addRolesToUser}
+		} else {
+			return {delete: 0, add: 0}
+		}
 		
 	} catch (error) {
 		return error

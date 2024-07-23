@@ -69,10 +69,21 @@ exports.findAndUpdate = async ({id = 0, username = null, email = null, data = {}
 			return Error('No user by this id')
 		}
 		const roles = await Role.findMany({roleName: data.roles})
-		console.log(roles)
-		// await Role.updateUserRoles({user, newRoles: roles})
-		const updateUser = (`UPDATE users SET ${data.username ? `username = ${data.username},`: ``} ${data.email ? `email = ${data.email},`: ``} ${data.password ? `password = ${data.password}`: ``} WHERE id = ${user.id}`)
-		console.log(updateUser)
+		delete data.roles
+		console.log(data)
+		let updateUserQuery = []
+		for (const key in data) {
+			if (data[key]) {
+				updateUserQuery.push(` ${[key]} = '${data[key]}'`)
+			}
+		}
+		const updateRoles = await Role.updateUserRoles({user, newRoles: roles})
+		console.log(updateRoles)
+		if (updateUserQuery) {
+			const updateUser = await db.query(`UPDATE users SET${updateUserQuery} WHERE id = ${user.id}`)
+			return updateUser.rowCount
+		}
+		return updateRoles
 		// const updateUser = await db.query(`UPDATE users SET ${data.username ? `username = ${data.username},`: ``} ${data.email ? `email = ${data.email},`: ``} ${data.password ? `username = ${data.password}`: ``} WHERE id = ${user.id}`)
 	} catch (error) {
 		return error
