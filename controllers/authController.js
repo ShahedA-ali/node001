@@ -72,14 +72,13 @@ exports.register = catchAsync(async (req, res, next) => {
 
     // 1) Check whether username, password and email are valid
 
-
     // 2) Encrypt the Password
     const cryptPassword = crypto.createHash('sha256').update(password + process.env.SECRET_KEY).digest('hex')
 
     // 2) Create User if error return the error
     const newUser = await User.create({ username, password: cryptPassword, email })
     if (newUser !== 1) {
-        console.log(newUser.detail == 'Key (email)=(ali@gmail.com) already exists.')
+        console.log(newUser.message)
         const duplicateError = newUser.detail.split('=')[0]
         let error;
         switch (duplicateError) {

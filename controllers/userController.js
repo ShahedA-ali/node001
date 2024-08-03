@@ -66,12 +66,12 @@ exports.deleteOne = catchAsync(async (req, res, next) => {
 
 
 exports.updateOne = catchAsync(async (req, res, next) => {
-  const {username, email, password, roles} = req.body
+  const { username, email, password, roles } = req.body
   const id = req.params.id
   const user = await User.findOne({ id })
   const a =
-  await User.findAndUpdate({id, data: {roles, username, email, password}})
-console.log(a)
+    await User.findAndUpdate({ id, data: { roles, username, email, password } })
+  console.log(a)
   // .then(async (user) => {
   //   const roles = await Roles.findMany({ userId: id }).then(roles => roles.roles.map(role => role.role_name));
   //   user.roles = roles
