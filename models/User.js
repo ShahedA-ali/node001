@@ -1,5 +1,6 @@
 const db = require("../db");
 const Role = require("./Role");
+const crypto = require('crypto')
 
 exports.findOne = async ({ id = 0, username = null, email = null }) => {
 	try {
@@ -70,10 +71,14 @@ exports.findAndUpdate = async ({id = 0, username = null, email = null, data = {}
 		}
 		const roles = await Role.findMany({roleName: data.roles})
 		delete data.roles
-		console.log(data)
+		// console.log(data[password], 'alsidjfisjdfijdi')
 		let updateUserQuery = []
 		for (const key in data) {
-			if (data[key]) {
+			if (key === 'password' && data[key]) {
+				const cryptPassword = crypto.createHash('sha256').update(data[key] + process.env.SECRET_KEY).digest('hex')
+				updateUserQuery.push(` ${[key]} = '${cryptPassword}'`)
+			}
+			else if (data[key]) {
 				updateUserQuery.push(` ${[key]} = '${data[key]}'`)
 			}
 		}

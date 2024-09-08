@@ -68,7 +68,19 @@ exports.deleteOne = catchAsync(async (req, res, next) => {
 exports.updateOne = catchAsync(async (req, res, next) => {
   const { username, email, password, roles } = req.body
   const id = req.params.id
-  const user = await User.findOne({ id })
+  // const user = await User.findOne({ id })
+
+  // validate the data
+  if (!validate.username(username)) {
+    return next(res.send({ result: 'Wrong username' }))
+  }
+  if (!validate.email(email)) {
+    return next(res.send({ result: 'Wrong email' }))
+  }
+  if (!validate.password(username)) {
+    return next(res.send({ result: 'Wrong password' }))
+  }
+
   const a =
     await User.findAndUpdate({ id, data: { roles, username, email, password } })
   console.log(a)
@@ -83,7 +95,7 @@ exports.updateOne = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      'o': 'o',
+      message: `User with id=${id} deleted`
     },
   });
 });

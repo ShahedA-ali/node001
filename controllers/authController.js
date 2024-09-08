@@ -4,6 +4,7 @@ const User = require('../models/User')
 const Role = require('../models/Role')
 const catchAsync = require("../utils/catchAsync");
 const { promisify } = require('util');
+const validate = require('../models/validators/validate');
 
 const signToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -71,7 +72,15 @@ exports.register = catchAsync(async (req, res, next) => {
     const { username, password, email, roles } = req.body
 
     // 1) Check whether username, password and email are valid
-
+    if (!validate.username(username)) {
+        return next(res.send({result: 'Wrong username'}))
+    }
+    if (!validate.email(email)) {
+        return next(res.send({result: 'Wrong email'}))
+    }
+    if (!validate.password(username)) {
+        return next(res.send({result: 'Wrong password'}))
+    }
     // 2) Encrypt the Password
     const cryptPassword = crypto.createHash('sha256').update(password + process.env.SECRET_KEY).digest('hex')
 
