@@ -14,7 +14,6 @@ exports.password = (password) => {
     const passwordPattern = /^(?=.*?[A-Za-z])(?=.*?[0-9]).{8,}$/;
     return passwordPattern.test(password)
 }
-
 // const username = (username) => {
 //     const usernamePattern = /^[a-zA-Z0-9_]{6,12}$/;
 //     return usernamePattern.test(username)
