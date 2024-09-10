@@ -43,26 +43,28 @@ exports.login = catchAsync(async (req, res, next) => {
 
     // 1) Check if username exist if no email should exist and password must exist
     if (!username && !email || !password) {
-        return next(res.send({ result: 'Please provide email or username and password!', status: 400 }));
-    }
-    // 2) Check if user exists && password is correct
-    // find the user by username or by email
-    const user = await User.findOne({ username: username, email: email })
-    console.log(user)
-    if (!user || user.password !== password) {
-        return next(res.send({ result: 'Incorrect email or password', status: 401 }))
+        return next(res.send({ message: 'Please provide email or username and password!', status: 400 }));
     }
 
-    // 3) accumulate user roles
+    // 3) Check if user exists && password is correct
+    // find the user by username or by email
+    const user = await User.findOne({ username: username, email: email || username })
+    console.log(user)
+    const cryptPassword = crypto.createHash('sha256').update(password + process.env.SECRET_KEY).digest('hex')
+    if (!user || user.password !== cryptPassword) {
+        return next(res.send({ message: 'Incorrect email or password', status: 401 }))
+    }
+
+    // 4) accumulate user roles
     // find user roles
     const roles = await Role.findMany({ userId: user.id });
     if (!roles.count) {
-        return next(res.send({ result: 'Invalid user, no roles', status: 403 }))
+        return next(res.send({ message: 'Invalid user, no roles', status: 403 }))
     }
     // add to users the roles
     // user.roles = roles.roles.map(role => role.role_name);
 
-    // 4) If everything ok, send token to client
+    // 5) If everything ok, send token to client
     createSendToken(user, 200, res);
 
     // res.send({result: user})
@@ -72,14 +74,21 @@ exports.register = catchAsync(async (req, res, next) => {
     const { username, password, email, roles } = req.body
 
     // 1) Check whether username, password and email are valid
+    if (roles.length < 1) {
+        return next(res.send({message: 'User should have a role'}))
+    }
     if (!validate.username(username)) {
-        return next(res.send({result: 'Wrong username'}))
+        return next(res.send({message: 'Wrong username'}))
+    }
+    // if username is like email it is wrong
+    if (validate.email(username)) {
+        return next(res.send({message: 'Wrong username'}))
     }
     if (!validate.email(email)) {
-        return next(res.send({result: 'Wrong email'}))
+        return next(res.send({message: 'Wrong email'}))
     }
-    if (!validate.password(username)) {
-        return next(res.send({result: 'Wrong password'}))
+    if (!validate.password(password)) {
+        return next(res.send({message: 'Wrong password'}))
     }
     // 2) Encrypt the Password
     const cryptPassword = crypto.createHash('sha256').update(password + process.env.SECRET_KEY).digest('hex')
@@ -103,7 +112,7 @@ exports.register = catchAsync(async (req, res, next) => {
                 break;
         }
         console.log(error)
-        return next(res.status(403).json({success: false, result: error}))
+        return next(res.status(403).json({success: false, message: error}))
     }
     // console.log(roles, 'sldkfj')
     // const roleIds = await Role.findMany({roleName: roles})
@@ -118,7 +127,7 @@ exports.register = catchAsync(async (req, res, next) => {
     } catch (error) {
         const deleteUser = await User.findAndDelete({id: user.id})
         console.log(error, deleteUser)
-        return next(res.status(400).json({success: false, result: error}))
+        return next(res.status(400).json({success: false, message: error}))
     }
 
 
