@@ -72,15 +72,15 @@ exports.updateOne = catchAsync(async (req, res, next) => {
     // const user = await User.findOne({ id })
 
     // validate the data
-    if (!validate.username(username)) {
-        return next(res.json({ message: "Wrong username" }));
-    }
-    if (!validate.email(email)) {
-        return next(res.json({ message: "Wrong email" }));
-    }
-    if (password && !validate.password(password)) {
-        return next(res.json({ message: "Wrong password" }));
-    }
+    // if (!validate.username(username)) {
+    //     return next(res.json({ message: "Wrong username" }));
+    // }
+    // if (!validate.email(email)) {
+    //     return next(res.json({ message: "Wrong email" }));
+    // }
+    // if (password && !validate.password(password)) {
+    //     return next(res.json({ message: "Wrong password" }));
+    // }
     try {
         const a = await User.findAndUpdate({
             id,
