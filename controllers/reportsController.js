@@ -5,7 +5,7 @@ const catchAsync = require("../utils/catchAsync");
 exports.sadGeneralSegment = catchAsync(async (req, res, next) => {
     const connection = await connectToDatabase();
     const { start, end, type, COD } = req.query;
-    console.log(req.query);
+    console.log(typeof type);
     try {
         // const sadGeneral = await connection.execute(`select * from AWUNADM.UNCUOTAB where CUO_COD = 'AF212'`, { kbv: 1 },
         //     { fetchInfo: { "C": { type: connection.STRING } } });
@@ -118,7 +118,7 @@ exports.sadGeneralSegment = catchAsync(async (req, res, next) => {
    WHERE     TO_CHAR (ide_reg_dat, 'yyyy-mm-dd', 'nls_calendar=persian') BETWEEN '1399-10-01' AND '1400-09-30'
          ${COD ? `AND g.cmp_con_cod LIKE '${COD}'` : ``}
          ${type
-                ? `AND IDE_TYP_TYP IN (${type}})`
+                ? `AND IDE_TYP_TYP IN (${typeof type != 'string' ? type.map(i => `'${i}'`): `'${type}'`})`
                 : `AND IDE_TYP_TYP IN ('I', 'E')`
             }
 ORDER BY DEC_REF_YER,
@@ -126,12 +126,12 @@ ORDER BY DEC_REF_YER,
          i.key_itm_nbr,
          tax_lin_cod`;
         //  console.log(query)
-        // const sadGeneral = await connection.execute(
-        //     // 'select * from AWUNADM.UNCUOTAB'
-        //     query,
-        //     [],
-        //     { outFormat: oracledb.OUT_FORMAT_OBJECT }
-        // );
+        const sadGeneral = await connection.execute(
+        
+            query,
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
         // const columnNames = sadGeneral.metaData.map((col) => col.name);
         // console.log(sadGeneral)
@@ -139,7 +139,7 @@ ORDER BY DEC_REF_YER,
 
         res.status(200).json({
             status: "success",
-            data: query,
+            data: sadGeneral.rows,
         });
     } catch (err) {
         return next(res.send({ message: `Error reading records: ${err}` }));
