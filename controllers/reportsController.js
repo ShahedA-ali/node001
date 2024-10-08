@@ -5,10 +5,7 @@ const catchAsync = require("../utils/catchAsync");
 exports.sadGeneralSegment = catchAsync(async (req, res, next) => {
     const connection = await connectToDatabase();
     const { start, end, type, COD } = req.query;
-    console.log(typeof type);
     try {
-        // const sadGeneral = await connection.execute(`select * from AWUNADM.UNCUOTAB where CUO_COD = 'AF212'`, { kbv: 1 },
-        //     { fetchInfo: { "C": { type: connection.STRING } } });
         const query = `SELECT DEC_REF_YER
              RefYear,
          ide_typ_sad
@@ -115,28 +112,25 @@ exports.sadGeneralSegment = catchAsync(async (req, res, next) => {
              ON     i.KEY_ITM_NBR = t.KEY_ITM_NBR
                 AND t.tax_lin_cod = x.tax_cod
                 AND x.valid_to IS NULL
-   WHERE     TO_CHAR (ide_reg_dat, 'yyyy-mm-dd', 'nls_calendar=persian') BETWEEN '1399-10-01' AND '1400-09-30'
+   WHERE
+   ${start && end ? `TO_CHAR (ide_reg_dat, 'yyyy-mm-dd') BETWEEN '${start}'  AND '${end}'` : ``}
+   
          ${COD ? `AND g.cmp_con_cod LIKE '${COD}'` : ``}
-         ${type
-                ? `AND IDE_TYP_TYP IN (${typeof type != 'string' ? type.map(i => `'${i}'`): `'${type}'`})`
-                : `AND IDE_TYP_TYP IN ('I', 'E')`
-            }
+         ${
+             type
+                 ? `AND IDE_TYP_TYP IN (${
+                       typeof type != "string"
+                           ? type.map((i) => `'${i}'`)
+                           : `'${type}'`
+                   })`
+                 : `AND IDE_TYP_TYP IN ('I', 'E')`
+         }
 ORDER BY DEC_REF_YER,
-         ide_reg_nbr,
-         i.key_itm_nbr,
-         tax_lin_cod`;
-        //  console.log(query)
-        const sadGeneral = await connection.execute(
-        
-            query,
-            [],
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
-        );
-
-        // const columnNames = sadGeneral.metaData.map((col) => col.name);
-        // console.log(sadGeneral)
-        // console.log(columnNames)
-
+         ide_reg_nbr,         i.key_itm_nbr,         tax_lin_cod`;
+         console.log(req.url) 
+        const sadGeneral = await connection.execute(query, [], {
+            outFormat: oracledb.OUT_FORMAT_OBJECT,
+        });
         res.status(200).json({
             status: "success",
             data: sadGeneral.rows,
